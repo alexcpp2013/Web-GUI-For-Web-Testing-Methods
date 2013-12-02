@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<config>
+  <!-- some options -->
+  <site>http://kpi.ua</site>
+  <site>http://zv.kpi.ua/</site>
+</config>

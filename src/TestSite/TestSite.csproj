@@ -61,6 +61,8 @@
       <DependentUpon>default.aspx</DependentUpon>
     </Compile>
     <Compile Include="Modules\BaseTest.cs" />
+    <Compile Include="Modules\Delay.cs" />
+    <Compile Include="Modules\MailData.cs" />
     <Compile Include="Modules\SiteItems.cs" />
     <Compile Include="Modules\UnitTest.cs" />
     <Compile Include="Modules\XmlReaderConfig.cs" />
@@ -75,7 +77,9 @@
     <Content Include="Content\load.gif" />
     <Content Include="Data\sites.xml" />
     <Content Include="Data\tags.xml" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -107,7 +111,7 @@
         <WebProjectProperties>
           <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>42570</DevelopmentServerPort>
+          <DevelopmentServerPort>7401</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>
           </IISUrl>

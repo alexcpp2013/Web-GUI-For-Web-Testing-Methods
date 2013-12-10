@@ -200,5 +200,27 @@ namespace UnitSite
             if (result != "")
                 throw new Exception("Количетсво pdf файлов на сайте:\n" + result);
         }
+
+        [STAThread]
+        [TestMethod, TestCategory("Regression Tests")]
+        public void VerifyRobotsTxt()
+        {
+            string result = "";
+
+            try
+            {
+                var th = new Thread(obj => GetRobotsTxt(ref result));
+                th.SetApartmentState(ApartmentState.STA);
+                th.Start();
+                th.Join();
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail("Ошибка: \n", ex.Message);
+            }
+
+            if (result != "")
+                throw new Exception("Количетсво pdf файлов на сайте:\n" + result);
+        }
     }
 }

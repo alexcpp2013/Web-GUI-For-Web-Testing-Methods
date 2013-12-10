@@ -521,7 +521,7 @@ namespace UnitSite
                             string res = "";
                             var data = Web.Document.GetElementById(id);
 
-                            if (data != null)
+                            /*if (data != null)
                             {
                                 if (data.InnerHtml != null)
                                     res = data.InnerText;
@@ -531,6 +531,28 @@ namespace UnitSite
                             else
                             {
                                 res = NoCountFiles(suffix, noprefics, nosuffix, Web, el, filetypes, res);
+                            }*/
+
+                            try
+                            {
+                                res = data.InnerText;
+                                if (res == null)
+                                    throw new NullReferenceException();
+                            }
+                            catch (NullReferenceException)
+                            {
+                                string nores = noprefics + el + " " + suffix + filetypes + " " + nosuffix;
+                                try
+                                {
+                                    if (Web.Document.Body.InnerText.IndexOf(nores) < 0)
+                                        throw new Exception("Не найдено ключевых элементов на странице.");
+                                    else
+                                        res = nores;
+                                }
+                                catch (NullReferenceException)
+                                {
+                                    throw new Exception("Не найдено ключевых элементов на странице.");
+                                }
                             }
 
                             result += "\nСайт: " + el + "\tколичество " + filetypes + " файлов: " + res;
@@ -582,6 +604,37 @@ namespace UnitSite
             {
                 error += "\n\nОшибка: " + ex.Message;
                 //throw; IF not thread
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+        }
+
+        protected void GetRobotsTxt(ref string result)
+        {
+            try
+            {
+                var suffix = "/robots.txt";
+
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+                    
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        var site = el + suffix;
+                        LoadSite(Web, site);
+
+                        var res = Web.Document.Body.InnerText;
+
+                        result += "\nСайт: " + el + "\tданные из robots.txt: \n\n" + res + "\n";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
             }
             finally
             {

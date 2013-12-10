@@ -87,6 +87,9 @@ namespace UnitSite
                     case 7: RunMethod(test, test.VerifyFileType, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
+                    case 8: RunMethod(test, test.VerifyRobotsTxt, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
                     default: RunAlertScript("Ошибка во время определения метода для тестирования.");
                              error += "Ошибка во время определения метода для тестирования.";
                         break;
@@ -246,7 +249,8 @@ namespace UnitSite
                 var md = new MailData();
 
                 md.Message = "Ваш результат:\n\n" +
-                    "Сайты: \n" + tbSites.Text + "\n\n" +
+                    "Сайты: \n" + tbSites.Text + 
+                    "\n\n" + "Условия: \n" + tbTags.Text + "\n\n" +
                     "Результат: \n" + tbResult.Text;
                 md.Subject = "Результат тестов";
                 md.From = "testdp0mail@gmail.com";

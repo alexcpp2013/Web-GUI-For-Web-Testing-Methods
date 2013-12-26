@@ -89,6 +89,8 @@
                         <asp:ListItem Value="6">Тест &#39;Данные с push2check.com&#39;</asp:ListItem>
                         <asp:ListItem Value="7">Тест &#39;Данные о количестве файлов на сайте от Google&#39;</asp:ListItem>
                         <asp:ListItem Value="8">Тест &#39;Данные из robots.txt&#39;</asp:ListItem>
+                        <asp:ListItem Value="9">Тест &#39;Время загрузки сайта&#39;</asp:ListItem>
+                        <asp:ListItem Value="10">Тест &#39;Изменения на сайте&#39;</asp:ListItem>
                     </asp:DropDownList>
 
                     <br /> <br />

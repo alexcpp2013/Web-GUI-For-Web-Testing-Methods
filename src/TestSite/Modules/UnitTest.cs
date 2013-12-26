@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define WEB
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,187 +9,155 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Text;
 
-namespace UnitSite
+namespace UnitSite.Modules
 {
     [TestClassAttribute]
     public sealed class UnitTest : BaseTest
     {
+        public UnitTest()
+        {
+            ClassInitialize();
+        }
+
+        ~UnitTest()
+        {
+            ClassClean();
+        }
+        
+        protected delegate void TestMethod(ref string str);
+
+        protected string RunMethod(TestMethod d)
+        {
+            string str = "";
+
+            if (d != null)
+            {
+                try
+                {
+                    var th = new Thread(obj => d(ref str));
+                    th.SetApartmentState(ApartmentState.STA);
+                    th.Start();
+                    th.Join();
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail("Ошибка: \n", ex.Message);
+                }
+            }
+
+            return str;
+        }
+
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyAllWebSiteAttributes()
         {
-            string result = "";
+            string result = RunMethod(GetAllMetaTags);
 
-            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-
-            try
-            {
-                var th = new Thread(obj => GetAllSiteAttributes(ref result, Attributes,
-                                                              "META", "NAME", "CONTENT"));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
-
-            if (result != "")
-                throw new Exception("Найдены следующие мета-теги:\n" + result);
+#if (WEB)
+            throw new Exception("Найдены следующие мета-теги:\n" + result);
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyWebSiteAttributes()
         {
-            string error = "";
-
-            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-
-            try
-            {
-                var th = new Thread(obj => GetSiteAttributes(ref error, Attributes, SiteItems.Attributes,
-                                                              "META", "NAME", "CONTENT", true));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
+            string error = RunMethod(GetAddMetaTags);
 
             if (error != "")
                 Assert.Fail("Тэги не найдены на следующих страницах:\n" + error);
+
+#if (WEB)
+            if (error == "")
+                throw new Exception("Тэги найдены на всех страницах.\n");
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyWebSiteWebAttributes()
         {
-            string error = "";
-
-            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-
-            try
-            {
-                var th = new Thread(obj => GetSiteAttributes(ref error, Attributes, SiteItems.WebAttributes,
-                                                              "META", "NAME", "CONTENT", false));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
+            string error = RunMethod(GetMetaTags);
 
             if (error != "")
                 Assert.Fail("Тэги не найдены на следующих страницах:\n" + error);
+
+#if (WEB)
+            if (error == "")
+                throw new Exception("Тэги найдены на всех страницах.\n");
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyP2C()
         {
-            string result = "";
+            string result = RunMethod(GetP2C);
 
-            try
-            {
-                var th = new Thread(obj => GetP2C(ref result));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
-
-            if (result != "")
-                throw new Exception("Данные по сайтам:\n" + result);
+#if (WEB)
+            throw new Exception("Данные по сайтам:\n" + result);
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyWebGoogleBlocked()
         {
-            string error = "";
-
-            try
-            {
-                var th = new Thread(obj => VerifySiteTitle(ref error,
-                    "Предупреждение о вредоносном ПО"));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
+            string error = RunMethod(VerifyGoogleSiteTitle);
 
             if (error != "")
                 Assert.Fail("Google заблокирвоал следующие сайты:\n" + error);
-            else
+            
+#if (WEB)
+            if (error == "")  
                 throw new Exception("Google не заблокирвоал ни один из сайтов.\n");
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyWebSiteDate()
         {
-            string result = "";
+            string result = RunMethod(GetWebSiteDate);
 
-            try
-            {
-                var th = new Thread(obj => GetWebSiteDate(ref result));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
-
-            if (result != "")
-                throw new Exception("Дата прошлой модификации сайтов:\n" + result);
+#if (WEB)
+            throw new Exception("Дата прошлой модификации сайтов:\n" + result);
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyLocalFilesDate()
         {
-            string result = "";
+            //OR without thread
+            string result = RunMethod(GetLocalFilesDate);
 
-            try
-            {
-                //OR without thread
-                var th = new Thread(obj => GetLocalFilesDate(ref result));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
-
-            if (result != "")
-                throw new Exception("Дата прошлой модификации файлов в диерктории:\n" + result);
+#if (WEB)
+            throw new Exception("Дата прошлой модификации файлов в диерктории:\n" + result);
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyFileType()
         {
-            string result = "";
+            string result = RunMethod(GetCountFiles);
+
+#if (WEB)  
+            throw new Exception("Количетсво файлов на сайте:\n" + result);
+#endif
+        }
+
+        [STAThread]
+        [TestMethod, TestCategory("Regression Tests")]
+        public void VerifyLoadTime()
+        {
+            /*string result = "";
 
             try
             {
-                var th = new Thread(obj => GetCountFiles(ref result));
+                var th = new Thread(obj => GetLoadTime(ref result));
                 th.SetApartmentState(ApartmentState.STA);
                 th.Start();
                 th.Join();
@@ -195,32 +165,35 @@ namespace UnitSite
             catch (Exception ex)
             {
                 Assert.Fail("Ошибка: \n", ex.Message);
-            }
+            }*/
 
-            if (result != "")
-                throw new Exception("Количетсво pdf файлов на сайте:\n" + result);
+            string result = RunMethod(GetLoadTime);
+
+#if (WEB)
+            throw new Exception("Время загрузки сайтов:\n" + result);
+#endif
+        }
+
+        [STAThread]
+        [TestMethod, TestCategory("Regression Tests")]
+        public void VerifySiteEdit()
+        {
+            string result = RunMethod(GetSiteEdit);
+
+#if (WEB)
+            throw new Exception("Изменения на странице:\n" + result);
+#endif
         }
 
         [STAThread]
         [TestMethod, TestCategory("Regression Tests")]
         public void VerifyRobotsTxt()
         {
-            string result = "";
+            string result = RunMethod(GetRobotsTxt);
 
-            try
-            {
-                var th = new Thread(obj => GetRobotsTxt(ref result));
-                th.SetApartmentState(ApartmentState.STA);
-                th.Start();
-                th.Join();
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail("Ошибка: \n", ex.Message);
-            }
-
-            if (result != "")
-                throw new Exception("Количетсво pdf файлов на сайте:\n" + result);
+#if (WEB)
+            throw new Exception("Данные из robots.txt:\n" + result);
+#endif
         }
     }
 }

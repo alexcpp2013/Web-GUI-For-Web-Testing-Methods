@@ -12,8 +12,10 @@ using System.IO;
 using System.Threading.Tasks;
 //using System.Xml;
 using System.Text.RegularExpressions;
+using System.Data.SqlClient;
+using UnitSite.DB;
 
-namespace UnitSite
+namespace UnitSite.Modules
 {
     public abstract class BaseTest
     {
@@ -56,6 +58,7 @@ namespace UnitSite
 
         protected bool Navigate(WebBrowser Web, String address)
         {
+            //Use user address for understand what site we loaded exactly
             if (String.IsNullOrEmpty(address)) return false;
             if (address.Equals("about:blank")) return false;
             if (!address.StartsWith(HttpData.http) &&
@@ -187,6 +190,12 @@ namespace UnitSite
             return flag;
         }
 
+        protected void GetAllMetaTags(ref string result)
+        {
+            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
+            GetAllSiteAttributes(ref result, Attributes, "META", "NAME", "CONTENT");
+        }
+
         protected void GetAllSiteAttributes(ref string result,
             List<Tuple<string, string>> Attributes,
             string head = "META", string name = "NAME", string content = "CONTENT")
@@ -218,6 +227,18 @@ namespace UnitSite
             {
                 Application.ExitThread();   // Stops the thread
             }
+        }
+
+        protected void GetAddMetaTags(ref string error)
+        {
+            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
+            GetSiteAttributes(ref error, Attributes, SiteItems.Attributes, "META", "NAME", "CONTENT", true);
+        }
+
+        protected void GetMetaTags(ref string error)
+        {
+            List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
+            GetSiteAttributes(ref error, Attributes, SiteItems.WebAttributes, "META", "NAME", "CONTENT", false);
         }
 
         protected void GetSiteAttributes(ref string error,
@@ -303,6 +324,8 @@ namespace UnitSite
                                           RegexOptions.IgnoreCase);
                         if (tmp.Length == 0)
                             throw new Exception("Ошибка во время прасинга конца строки.");
+                        /*var res = Regex.Split(@tmp[0], @"\r\n<TD class=\w*>\r\n<DIV id=\w*_*\w*>|</DIV></TD>",
+                                              RegexOptions.IgnoreCase);*/
                         var res = Regex.Split(@tmp[0], @"\r\n<TD class=\w*>|</TD>",
                                               RegexOptions.IgnoreCase);
 
@@ -391,12 +414,15 @@ namespace UnitSite
 
         protected string CreateAddress(string address)
         {
+            //Use user address for understand what site we loaded exactly
             if (address.StartsWith(HttpData.http))
                 address = address.Replace(HttpData.http, "");
             if (address.StartsWith(HttpData.https))
                 address = address.Replace(HttpData.https, "");
             if (address.StartsWith(HttpData.www))
                 address = address.Replace(HttpData.www, "");
+
+            address = address.ToLower();
 
             return address;
         }
@@ -410,6 +436,11 @@ namespace UnitSite
                     SiteItems.Attributes.Add(el.Item1.ToLower());
                 }
             }
+        }
+
+        protected void VerifyGoogleSiteTitle(ref string error)
+        {
+            VerifySiteTitle(ref error, "Предупреждение о вредоносном ПО");
         }
 
         protected void VerifySiteTitle(ref string error, string title)
@@ -434,7 +465,7 @@ namespace UnitSite
                                  newaddress);
 
                         //or Like str OR Containe str
-                        string tmp = GetDocumentTitle(Web);
+                        string tmp = Web.DocumentTitle;
                         var t = Web.Document;
                         if (tmp == title)
                             error += "\nСайт: " + el;
@@ -451,11 +482,6 @@ namespace UnitSite
             {
                 Application.ExitThread();
             }
-        }
-
-        protected string GetDocumentTitle(WebBrowser Web)
-        {
-            return Web.DocumentTitle;
         }
 
         protected void GetWebSiteDate(ref string error)
@@ -609,6 +635,88 @@ namespace UnitSite
             {
                 Application.ExitThread();
             }
+        }
+
+        protected void GetLoadTime(ref string result)
+        {
+            try
+            {
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        var start = DateTime.Now;
+
+                        LoadSite(Web, el);
+
+                        var finish = DateTime.Now;
+                        var delta = finish - start;
+
+                        result += "\nСайт: " + el + "\tвремя загрузки: " + delta.ToString() + "\n";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+        }
+
+        protected void GetSiteEdit(ref string result)
+        {
+            try
+            {
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        LoadSite(Web, el); //, true);
+
+                        var table = Connection.DBTable.Instance;
+
+                        var title = Web.Document.Title;
+                        var meta = GetMetaForBD(Web);
+                        var body = Web.Document.Body.InnerText;
+                        
+                        var valuelist = new List<string>() { title, meta, body };
+                        var datalist = new List<string>() { "TITLE", "META", "BODY" };
+
+                        var local = table.GetData(CreateAddress(el), datalist, valuelist);
+                        result += "\nСайт: " + el + "\n" + local;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+        }
+
+        private string GetMetaForBD(WebBrowser Web)
+        {
+            var res = "";
+            string head = "META";
+            string name = "NAME";
+            string content = "CONTENT";
+            var Attributes = new List<Tuple<string, string>>();
+            GetAttributes(Web, Attributes, head, name, content);
+            foreach (var tag in Attributes)
+            {
+                res += "\n" + tag.Item1 + " = " + tag.Item2;
+            }
+            return res;
         }
 
         protected void GetRobotsTxt(ref string result)

@@ -5,7 +5,7 @@ using System.Web;
 using System.Text;
 using System.Windows.Forms;
 
-namespace UnitSite
+namespace UnitSite.Modules
 {
     public static class SiteItems
     {

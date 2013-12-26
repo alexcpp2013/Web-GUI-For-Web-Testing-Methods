@@ -8,6 +8,8 @@ using Microsoft.JScript;
 using System.IO;
 using System.Text;
 using System.Net.Mail;
+using UnitSite.Modules;
+using UnitSite.Connect;
 
 namespace UnitSite
 {
@@ -59,7 +61,7 @@ namespace UnitSite
                 GetData();
 
                 var test = new UnitTest();
-                test.ClassInitialize();
+                //test.ClassInitialize();
 
                 switch (ddList.SelectedIndex)
                 {
@@ -90,12 +92,21 @@ namespace UnitSite
                     case 8: RunMethod(test, test.VerifyRobotsTxt, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
+
+                    case 9: RunMethod(test, test.VerifyLoadTime, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
+                    case 10: RunMethod(test, test.VerifySiteEdit, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
                     default: RunAlertScript("Ошибка во время определения метода для тестирования.");
                              error += "Ошибка во время определения метода для тестирования.";
                         break;
                 }
 
-                test.ClassClean();
+                //test.ClassClean();
 
                 var finish = DateTime.Now;
                 var delta = finish - start;
@@ -246,7 +257,7 @@ namespace UnitSite
         {
             try
             {
-                var md = new MailData();
+                /*var md = new MailData();
 
                 md.Message = "Ваш результат:\n\n" +
                     "Сайты: \n" + tbSites.Text + 
@@ -256,9 +267,18 @@ namespace UnitSite
                 md.From = "testdp0mail@gmail.com";
                 md.Client = "smtp.gmail.com";
                 md.Password = "Qwerty!123";
-                md.To = tbMail.Text;
+                md.To = tbMail.Text;*/
 
-                SendEmail(md);
+                SendEmail(new MailData()
+                              .SetMailData("Ваш результат:\n\n" +
+                                           "Сайты: \n" + tbSites.Text + 
+                                           "\n\n" + "Условия: \n" + tbTags.Text + "\n\n" +
+                                           "Результат: \n" + tbResult.Text,
+                                           "Результат тестов",
+                                           "testdp0mail@gmail.com",
+                                           "smtp.gmail.com",
+                                           "Qwerty!123",
+                                           tbMail.Text));
             }
             catch (Exception ex)
             {

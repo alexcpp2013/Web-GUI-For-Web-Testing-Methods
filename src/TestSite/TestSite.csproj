@@ -61,11 +61,12 @@
       <DependentUpon>default.aspx</DependentUpon>
     </Compile>
     <Compile Include="Modules\BaseTest.cs" />
+    <Compile Include="DB\Connection.cs" />
     <Compile Include="Modules\Delay.cs" />
-    <Compile Include="Modules\MailData.cs" />
+    <Compile Include="Connect\MailData.cs" />
     <Compile Include="Modules\SiteItems.cs" />
     <Compile Include="Modules\UnitTest.cs" />
-    <Compile Include="Modules\XmlReaderConfig.cs" />
+    <Compile Include="Connect\XmlReaderConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +75,10 @@
     <Folder Include="Upload\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Data\SitesDB.mdf" />
+    <Content Include="App_Data\SitesDB_log.ldf">
+      <DependentUpon>SitesDB.mdf</DependentUpon>
+    </Content>
     <Content Include="Content\load.gif" />
     <Content Include="Data\sites.xml" />
     <Content Include="Data\tags.xml" />
@@ -111,7 +116,7 @@
         <WebProjectProperties>
           <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>18318</DevelopmentServerPort>
+          <DevelopmentServerPort>25958</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>
           </IISUrl>

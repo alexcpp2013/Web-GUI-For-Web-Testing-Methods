@@ -1,17 +1,27 @@
 ﻿#define WEB
+#undef NUNIT
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+//using NUnit.Framework;
 using System.Windows.Forms;
 using System.Threading;
 using System.Text;
 
 namespace UnitSite.Modules
 {
+
+    /// <summary>
+    /// Класс для тестов
+    /// </summary>
+#if (NUNIT)
+    [TestFixture, Category("Regression Tests")]
+#else
     [TestClassAttribute]
+#endif
     public sealed class UnitTest : BaseTest
     {
         public UnitTest()
@@ -49,109 +59,196 @@ namespace UnitSite.Modules
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifyAllWebSiteAttributes()
+#endif
+        public void VerifyAllWebPageAttributes()
         {
-            string result = RunMethod(GetAllMetaTags);
+            string result = RunMethod(GetAllPageMetaTags);
 
 #if (WEB)
-            throw new Exception("Найдены следующие мета-теги:\n" + result);
+            throw new Exception("\nНайдены следующие метатеги:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifyWebSiteAttributes()
+#endif
+        public void VerifyWebPageAttributes()
         {
-            string error = RunMethod(GetAddMetaTags);
+            string error = RunMethod(GetAddPageMetaTags);
 
             if (error != "")
-                Assert.Fail("Тэги не найдены на следующих страницах:\n" + error);
+                Assert.Fail("\nТэги не найдены на следующих страницах:\n" + error);
 
 #if (WEB)
             if (error == "")
-                throw new Exception("Тэги найдены на всех страницах.\n");
+                throw new Exception("\nТэги найдены на всех страницах.\n");
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifyWebSiteWebAttributes()
+#endif
+        public void VerifyWebPageWebAttributes()
         {
-            string error = RunMethod(GetMetaTags);
+            string error = RunMethod(GetPageMetaTags);
 
             if (error != "")
-                Assert.Fail("Тэги не найдены на следующих страницах:\n" + error);
+                Assert.Fail("\nТэги не найдены на следующих страницах:\n" + error);
 
 #if (WEB)
             if (error == "")
-                throw new Exception("Тэги найдены на всех страницах.\n");
+                throw new Exception("\nТэги найдены на всех страницах.\n");
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
+#endif
         public void VerifyP2C()
         {
             string result = RunMethod(GetP2C);
 
 #if (WEB)
-            throw new Exception("Данные по сайтам:\n" + result);
+            throw new Exception("\nДанные по сайтам:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
+#endif
         public void VerifyWebGoogleBlocked()
         {
-            string error = RunMethod(VerifyGoogleSiteTitle);
+            string error = RunMethod(VerifyGooglePageTitle);
 
             if (error != "")
-                Assert.Fail("Google заблокирвоал следующие сайты:\n" + error);
+                Assert.Fail("\nGoogle заблокирвоал следующие страницы/сайты:\n" + error);
             
 #if (WEB)
             if (error == "")  
-                throw new Exception("Google не заблокирвоал ни один из сайтов.\n");
+                throw new Exception("\nGoogle не заблокирвоал ни одну из страниц (не один из сайтов).\n");
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifyWebSiteDate()
+#endif
+        public void IsPageLoad()
         {
-            string result = RunMethod(GetWebSiteDate);
+            string error = RunMethod(VerifyIsPageLoad);
+
+            if (error != "")
+                Assert.Fail("Следующие страницы не загружаются:\n" + error);
 
 #if (WEB)
-            throw new Exception("Дата прошлой модификации сайтов:\n" + result);
+            if (error == "")
+                throw new Exception("\nВсе страницы загружаются.\n");
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
+#endif
+        public void IsPageUpdatedSixMonth()
+        {
+            string error = RunMethod(VerifyIsPageUpdatedSixMonth);
+
+            if (error != "")
+                Assert.Fail("\nСледующие страницы не обновлялись последние 6 месяцев:\n" + error);
+
+#if (WEB)
+            if (error == "")
+                throw new Exception("\nВсе страницы обновлялись за последние 6 месяцев.\n");
+#endif
+        }
+
+        [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
+        [TestMethod, TestCategory("Regression Tests")]
+#endif
+        public void NoMethod()
+        {
+            string error = "\nДанный метод еще не реализован.\n".ToUpper();
+
+            Assert.Fail(error);
+        }
+
+        [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
+        [TestMethod, TestCategory("Regression Tests")]
+#endif
+        public void VerifyWebPageDate()
+        {
+            string result = RunMethod(GetWebPageDate);
+
+#if (WEB)
+            throw new Exception("\nДата прошлой модификации страниц:\n" + result);
+#endif
+        }
+
+        [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
+        [TestMethod, TestCategory("Regression Tests")]
+#endif
         public void VerifyLocalFilesDate()
         {
             //OR without thread
             string result = RunMethod(GetLocalFilesDate);
 
 #if (WEB)
-            throw new Exception("Дата прошлой модификации файлов в диерктории:\n" + result);
+            throw new Exception("\nДата прошлой модификации файлов в диерктории:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
+#endif
         public void VerifyFileType()
         {
             string result = RunMethod(GetCountFiles);
 
 #if (WEB)  
-            throw new Exception("Количетсво файлов на сайте:\n" + result);
+            throw new Exception("\nКоличетсво файлов на сайте:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifyLoadTime()
+#endif
+        public void VerifyPageLoadTime()
         {
             /*string result = "";
 
@@ -167,32 +264,70 @@ namespace UnitSite.Modules
                 Assert.Fail("Ошибка: \n", ex.Message);
             }*/
 
-            string result = RunMethod(GetLoadTime);
+            string result = RunMethod(GetPageLoadTime);
 
 #if (WEB)
-            throw new Exception("Время загрузки сайтов:\n" + result);
+            throw new Exception("\nВремя загрузки страницы:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
-        public void VerifySiteEdit()
+#endif
+        public void AllPageUrls()
         {
-            string result = RunMethod(GetSiteEdit);
+            string result = RunMethod(GetAllPageUrls);
 
 #if (WEB)
-            throw new Exception("Изменения на странице:\n" + result);
+            throw new Exception("\nСсылки:\n" + result);
 #endif
         }
 
         [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
         [TestMethod, TestCategory("Regression Tests")]
+#endif
+        public void AllSitePagesUrls()
+        {
+            string result = RunMethod(GetAllSitePageUrls);
+
+#if (WEB)
+            throw new Exception("\nСсылки:\n" + result);
+#endif
+        }
+
+        [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
+        [TestMethod, TestCategory("Regression Tests")]
+#endif
+        public void VerifyPageDBEdit()
+        {
+            string result = RunMethod(GetPageEdit);
+
+#if (WEB)
+            throw new Exception("\nИзменения на странице:\n" + result);
+#endif
+        }
+
+        [STAThread]
+#if (NUNIT)
+        [TestFixture]
+#else
+        [TestMethod, TestCategory("Regression Tests")]
+#endif
         public void VerifyRobotsTxt()
         {
             string result = RunMethod(GetRobotsTxt);
 
 #if (WEB)
-            throw new Exception("Данные из robots.txt:\n" + result);
+            throw new Exception("\nДанные из robots.txt:\n" + result);
 #endif
         }
     }

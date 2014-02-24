@@ -68,16 +68,16 @@ namespace UnitSite
                     case 0: RunMethod(test, test.VerifyWebGoogleBlocked, ref error,
                                      "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
-                    case 1: RunMethod(test, test.VerifyAllWebSiteAttributes, ref error,
+                    case 1: RunMethod(test, test.VerifyAllWebPageAttributes, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
-                    case 2: RunMethod(test, test.VerifyWebSiteAttributes, ref error,
+                    case 2: RunMethod(test, test.VerifyWebPageAttributes, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
-                    case 3: RunMethod(test, test.VerifyWebSiteWebAttributes, ref error,
+                    case 3: RunMethod(test, test.VerifyWebPageWebAttributes, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
-                    case 4: RunMethod(test, test.VerifyWebSiteDate, ref error,
+                    case 4: RunMethod(test, test.VerifyWebPageDate, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
                     case 5: RunMethod(test, test.VerifyLocalFilesDate, ref error,
@@ -93,13 +93,33 @@ namespace UnitSite
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
 
-                    case 9: RunMethod(test, test.VerifyLoadTime, ref error,
+                    case 9: RunMethod(test, test.VerifyPageLoadTime, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
 
-                    case 10: RunMethod(test, test.VerifySiteEdit, ref error,
+                    case 10: RunMethod(test, test.VerifyPageDBEdit, ref error,
                                     "\n" + ddList.SelectedItem.ToString() + "\n");
                         break;
+
+                    case 11: RunMethod(test, test.IsPageLoad, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
+                    case 12: RunMethod(test, test.IsPageUpdatedSixMonth, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
+                    case 13: RunMethod(test, test.AllPageUrls, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
+                    case 14: RunMethod(test, test.AllSitePagesUrls, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;
+
+                    /*case xx: RunMethod(test, test.NoMethod, ref error,
+                                    "\n" + ddList.SelectedItem.ToString() + "\n");
+                        break;*/
 
                     default: RunAlertScript("Ошибка во время определения метода для тестирования.");
                              error += "Ошибка во время определения метода для тестирования.";

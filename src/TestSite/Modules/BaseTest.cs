@@ -1,4 +1,6 @@
-﻿using System;
+﻿#undef NUNIT
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,6 +9,7 @@ using System.Windows.Forms;
 using System.ComponentModel;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+//using NUnit.Framework;
 using mshtml;
 using System.IO;
 using System.Threading.Tasks;
@@ -14,36 +17,55 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Data.SqlClient;
 using UnitSite.DB;
+using System.Globalization;
 
 namespace UnitSite.Modules
 {
     public abstract class BaseTest
     {
         //------------------------------------------------
-
+        
+        #region BASEMETHODS
+#if (NUNIT)
+        [TestFixtureSetUp]
+#else
         [ClassInitializeAttribute]
+#endif
         virtual public void ClassInitialize()
         {
             ;
         }
 
+#if (NUNIT)
+        [TestFixtureTearDown]
+#else
         [ClassCleanupAttribute]
+#endif    
         virtual public void ClassClean()
         {
             ;
         }
 
+#if (NUNIT)
+        [SetUp]
+#else
         [TestInitializeAttribute]
+#endif  
         public void TestStart()
         {
             TestClean();
         }
 
+#if (NUNIT)
+        [TearDown]
+#else
         [TestCleanupAttribute]
+#endif 
         public void TestClean()
         {
             ;
         }
+        #endregion
 
         //------------------------------------------------
 
@@ -52,8 +74,16 @@ namespace UnitSite.Modules
             public static string http = "http://";
             public static string https = "https://";
             public static string www = "www.";
+            //ww2 ww3 www2 www3 ... must use in address
+            //or use List<string>
 
             public enum TypeParameter { Good, Nothing, Error }
+
+            public static string Culture = "en-US";
+
+            public static int RequestDelay = 100; //msc
+
+            //public const int TREE = 0;
         }
 
         protected bool Navigate(WebBrowser Web, String address)
@@ -151,7 +181,7 @@ namespace UnitSite.Modules
             Web = null;
         }
 
-        protected void LoadSite(WebBrowser Web, string url, bool delay = false, string tag = "body")
+        protected void LoadPage(WebBrowser Web, string url, bool delay = false, string tag = "body")
         {
             if (Navigate(Web, url) != true)
                 throw new Exception("Не корректный url.");
@@ -159,6 +189,13 @@ namespace UnitSite.Modules
             while (Web.ReadyState != WebBrowserReadyState.Complete)
                 // || Web.IsBusy || Web.Url.AbsoluteUri != url)
                 Application.DoEvents();
+
+            /*if (Web.Document == null)
+                throw new Exception("Страница не загрузилась.");*/
+
+            /*IHTMLDocument2 currentDoc = (IHTMLDocument2)Web.Document.DomDocument;
+            if (currentDoc.url.StartsWith("res://"))
+                throw new Exception("Не найдена страница: " + url + "\n");*/
 
             if (delay)
             {
@@ -190,13 +227,13 @@ namespace UnitSite.Modules
             return flag;
         }
 
-        protected void GetAllMetaTags(ref string result)
+        protected void GetAllPageMetaTags(ref string result)
         {
             List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-            GetAllSiteAttributes(ref result, Attributes, "META", "NAME", "CONTENT");
+            GetAllPageAttributes(ref result, Attributes, "META", "NAME", "CONTENT");
         }
 
-        protected void GetAllSiteAttributes(ref string result,
+        protected void GetAllPageAttributes(ref string result,
             List<Tuple<string, string>> Attributes,
             string head = "META", string name = "NAME", string content = "CONTENT")
         {
@@ -208,12 +245,12 @@ namespace UnitSite.Modules
 
                     foreach (var el in SiteItems.WebSites)
                     {
-                        LoadSite(Web, el);
+                        LoadPage(Web, el);
                         GetAttributes(Web, Attributes, head, name, content);
 
                         foreach (var tag in Attributes)
                         {
-                            result += "\nСайт: " + el + "\t Тэг: " + tag.Item1 + "\t Значение: " + tag.Item2;
+                            result += "\nСтраница: " + el + "\t Тэг: " + tag.Item1 + "\t Значение: " + tag.Item2;
                         }
                         result += "\n";
                     }
@@ -229,19 +266,19 @@ namespace UnitSite.Modules
             }
         }
 
-        protected void GetAddMetaTags(ref string error)
+        protected void GetAddPageMetaTags(ref string error)
         {
             List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-            GetSiteAttributes(ref error, Attributes, SiteItems.Attributes, "META", "NAME", "CONTENT", true);
+            GetPageAttributes(ref error, Attributes, SiteItems.Attributes, "META", "NAME", "CONTENT", true);
         }
 
-        protected void GetMetaTags(ref string error)
+        protected void GetPageMetaTags(ref string error)
         {
             List<Tuple<string, string>> Attributes = new List<Tuple<string, string>>();
-            GetSiteAttributes(ref error, Attributes, SiteItems.WebAttributes, "META", "NAME", "CONTENT", false);
+            GetPageAttributes(ref error, Attributes, SiteItems.WebAttributes, "META", "NAME", "CONTENT", false);
         }
 
-        protected void GetSiteAttributes(ref string error,
+        protected void GetPageAttributes(ref string error,
             List<Tuple<string, string>> Attributes, HashSet<string> hsList,
             string head = "META", string name = "NAME", string content = "CONTENT", bool add = false)
         {
@@ -253,7 +290,7 @@ namespace UnitSite.Modules
 
                     foreach (var el in SiteItems.WebSites)
                     {
-                        LoadSite(Web, el);
+                        LoadPage(Web, el);
                         GetAttributes(Web, Attributes, head, name, content);
 
                         if (add)
@@ -262,10 +299,11 @@ namespace UnitSite.Modules
                         {
                             if (!FindAttribute(Attributes, tag))
                             {
-                                error += "\nСайт: " + el + "\t Тэг: " + tag;
+                                error += "\nСтраница: " + el + "\t Тэг: " + tag;
                             }
                         }
-                        error += "\n";
+                        if(error != "")
+                            error += "\n";
                     }
                 }
             }
@@ -297,7 +335,7 @@ namespace UnitSite.Modules
                     foreach (var el in SiteItems.WebSites)
                     {
                         string site = siteadd + CreateAddress(el);
-                        LoadSite(Web, site, true);
+                        LoadPage(Web, site, true);
                         if (Web.Url.ToString() != site)
                             throw new Exception("Адрес загруженного сайта не совпадает с адресом запрашеваемого: \n" +
                                 Web.Url.ToString());
@@ -330,7 +368,12 @@ namespace UnitSite.Modules
                                               RegexOptions.IgnoreCase);
 
                         if (SiteData.Count != (int)(res.Count() / 2))
-                            throw new Exception("Ошибка в формате данных во время парсинга.");
+                        {
+                            res = Regex.Split(@tmp[0], @"\r\n<TD class=\w*>\r\n<DIV id=\w*_*\w*>|</DIV></TD>",
+                                              RegexOptions.IgnoreCase);
+                            if (SiteData.Count != (int)(res.Count() / 2))
+                                throw new Exception("Ошибка в формате данных во время парсинга.");
+                        }
                         int N = res.Count();
                         for (int i = 1; i < N; i += 2)
                         {
@@ -419,6 +462,7 @@ namespace UnitSite.Modules
                 address = address.Replace(HttpData.http, "");
             if (address.StartsWith(HttpData.https))
                 address = address.Replace(HttpData.https, "");
+            //http(s)://www. Only now we can verify
             if (address.StartsWith(HttpData.www))
                 address = address.Replace(HttpData.www, "");
 
@@ -438,12 +482,12 @@ namespace UnitSite.Modules
             }
         }
 
-        protected void VerifyGoogleSiteTitle(ref string error)
+        protected void VerifyGooglePageTitle(ref string error)
         {
-            VerifySiteTitle(ref error, "Предупреждение о вредоносном ПО");
+            VerifyPageTitle(ref error, "Предупреждение о вредоносном ПО");
         }
 
-        protected void VerifySiteTitle(ref string error, string title)
+        protected void VerifyPageTitle(ref string error, string title)
         {
             try
             {
@@ -461,14 +505,14 @@ namespace UnitSite.Modules
                         {
                             newaddress = HttpData.http + el;
                         }
-                        LoadSite(Web, prefsite +
+                        LoadPage(Web, prefsite +
                                  newaddress);
 
                         //or Like str OR Containe str
                         string tmp = Web.DocumentTitle;
                         var t = Web.Document;
                         if (tmp == title)
-                            error += "\nСайт: " + el;
+                            error += "\nСтраница/Сайт: " + el;
                         if(error != "")
                             error += "\n";
                     }
@@ -484,7 +528,7 @@ namespace UnitSite.Modules
             }
         }
 
-        protected void GetWebSiteDate(ref string error)
+        protected void GetWebPageDate(ref string error)
         {
             try
             {
@@ -492,15 +536,18 @@ namespace UnitSite.Modules
                 {
                     SetWebBrowserOptions(Web);
 
+                    error += "\nТекущая дата/время на сервере: " + DateTime.Now + "\n";
                     foreach (var s in SiteItems.WebSites)
                     {
-                        LoadSite(Web, s);
+                        LoadPage(Web, s);
 
                         if (Web.Document != null)
                         {
                             IHTMLDocument2 currentDoc =
                                 (IHTMLDocument2)Web.Document.DomDocument;
-                            error += "\nСайт: " + s + "\t Дата прошлой модификации: " + currentDoc.lastModified;
+                            error += "\nСтраница: " + s + "\t Дата прошлой модификации: " +
+                                DateTime.Parse(currentDoc.lastModified, new CultureInfo(HttpData.Culture, false));
+                                //+ currentDoc.lastModified;
                         }
                         error += "\n";
                     }
@@ -537,7 +584,7 @@ namespace UnitSite.Modules
                         foreach (var filetypes in SiteItems.WebAttributes)
                         {
                             var site = prefsite + el + "+" + suffix + filetypes + iesuffix;
-                            LoadSite(Web, site);
+                            LoadPage(Web, site);
 
                             if (Web.Url.ToString() != site)
                                 throw new Exception("Адрес загруженного сайта не совпадает с адресом запрашеваемого: \n" +
@@ -637,7 +684,7 @@ namespace UnitSite.Modules
             }
         }
 
-        protected void GetLoadTime(ref string result)
+        protected void GetPageLoadTime(ref string result)
         {
             try
             {
@@ -649,12 +696,12 @@ namespace UnitSite.Modules
                     {
                         var start = DateTime.Now;
 
-                        LoadSite(Web, el);
+                        LoadPage(Web, el);
 
                         var finish = DateTime.Now;
                         var delta = finish - start;
 
-                        result += "\nСайт: " + el + "\tвремя загрузки: " + delta.ToString() + "\n";
+                        result += "\nСтраница: " + el + "\tвремя загрузки: " + delta.ToString() + "\n";
                     }
                 }
             }
@@ -668,7 +715,17 @@ namespace UnitSite.Modules
             }
         }
 
-        protected void GetSiteEdit(ref string result)
+        protected void GetAllPageUrls(ref string result)
+        {
+            GetUrls(ref result, 0);
+        }
+
+        protected void GetAllSitePageUrls(ref string result)
+        {
+            GetUrls(ref result, 1);
+        }
+
+        private string GetUrls(ref string result, int TREE = 0)
         {
             try
             {
@@ -678,7 +735,148 @@ namespace UnitSite.Modules
 
                     foreach (var el in SiteItems.WebSites)
                     {
-                        LoadSite(Web, el); //, true);
+                        var list = new HashSet<string>();
+                        LoadPage(Web, el);
+                        result += "\nСтраница: " + el + "\n";
+
+                        //Recursion
+                        //We can use URL from webbrowser loaded, but that can use referring
+                        //We use user/client url without http(s), www, tolower
+                        list.Add(CreateAddress(el.EndsWith("/") ? el : (el + "/")));
+
+                        int localtree = 0;
+                        Thread.Sleep(HttpData.RequestDelay); //some time out to not to load the server
+                        UrlsTree(Web, el, list, ref localtree, TREE);
+                        //No threads
+                        //No add delay in each query
+
+                        foreach (var url in list)
+                            result += url + "\n";
+
+                        result += "\nКоличество ссылок: " + list.Count + "\n";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+            return result;
+        }
+
+        private void UrlsTree(WebBrowser Web, string el, HashSet<string> list, ref int localtree, int TREE)
+        {
+            foreach (HtmlElement link in Web.Document.Links)
+            {
+                string linkItemAll = CreateAddress(link.GetAttribute("href").ToString());
+                string linkItem = CreateAddress(linkItemAll);
+                if (linkItem.StartsWith(CreateAddress(el)) && 
+                    !list.Contains(linkItem))
+                {
+                    list.Add(linkItem);
+                    //result += linkItem + "\n";
+                    if (localtree < TREE)
+                    {
+                        LoadPage(Web, linkItemAll);
+                        ++localtree;
+                        UrlsTree(Web, el, list, ref localtree, TREE);
+                    }
+                }
+            }
+            --localtree;
+            return;
+        }
+
+        protected void VerifyIsPageLoad(ref string result)
+        {
+            try
+            {
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        string str = CreateAddress(el);
+                        if (str.IndexOf("/") >= 0 && !str.EndsWith("/"))
+                            throw new Exception("Данный адрес не является доменным именем: " + el + "\n");
+
+                        LoadPage(Web, el);
+                        IHTMLDocument2 currentDoc = (IHTMLDocument2)Web.Document.DomDocument;
+                        if (currentDoc.url.StartsWith("res://"))
+                            result += "\nСтраница: " + el + "\n";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+        }
+
+        protected void VerifyIsPageUpdatedSixMonth(ref string result)
+        {
+            const int monthCount = 6;
+
+            try
+            {
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        LoadPage(Web, el);
+
+                        if (Web.Document != null)
+                        {
+                            if (VerifyIsDateLastPageModify(monthCount, Web))
+                                result += "\nСтраница: " + el + "\n";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result += "\n\nОшибка: " + ex.Message;
+            }
+            finally
+            {
+                Application.ExitThread();
+            }
+        }
+
+        private bool VerifyIsDateLastPageModify(int monthCount, WebBrowser Web)
+        {
+            IHTMLDocument2 currentDoc = (IHTMLDocument2)Web.Document.DomDocument;
+            var dateNow = DateTime.Today;
+            var dateOld = DateTime.Parse(currentDoc.lastModified, new CultureInfo(HttpData.Culture, false));
+
+            if (dateNow.Date.AddMonths(-monthCount) >= dateOld.Date)
+                return true;
+
+            return false;
+        }
+
+        protected void GetPageEdit(ref string result)
+        {
+            try
+            {
+                using (var Web = new WebBrowser())
+                {
+                    SetWebBrowserOptions(Web);
+
+                    foreach (var el in SiteItems.WebSites)
+                    {
+                        LoadPage(Web, el); //, true);
 
                         var table = Connection.DBTable.Instance;
 
@@ -690,7 +888,7 @@ namespace UnitSite.Modules
                         var datalist = new List<string>() { "TITLE", "META", "BODY" };
 
                         var local = table.GetData(CreateAddress(el), datalist, valuelist);
-                        result += "\nСайт: " + el + "\n" + local;
+                        result += "\nСтраница: " + el + "\n" + local;
                     }
                 }
             }
@@ -723,7 +921,7 @@ namespace UnitSite.Modules
         {
             try
             {
-                var suffix = "/robots.txt";
+                var suffix = "robots.txt";
 
                 using (var Web = new WebBrowser())
                 {
@@ -731,8 +929,13 @@ namespace UnitSite.Modules
                     
                     foreach (var el in SiteItems.WebSites)
                     {
-                        var site = el + suffix;
-                        LoadSite(Web, site);
+                        var site = el;
+                        if (el.EndsWith("/"))
+                            site += suffix;
+                        else
+                            site += "/" + suffix;
+                        
+                        LoadPage(Web, site);
 
                         var res = Web.Document.Body.InnerText;
 
